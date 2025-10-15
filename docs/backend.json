@@ -127,12 +127,7 @@
           "type": "array",
           "description": "URLs of images of the crop.",
           "items": {
-            "type": "object",
-             "properties": {
-                "id": {"type": "string"},
-                "imageUrl": {"type": "string"},
-                "imageHint": {"type": "string"}
-             }
+            "type": "string"
           }
         },
         "qualityNotes": {

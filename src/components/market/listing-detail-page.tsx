@@ -111,9 +111,10 @@ export default function ListingDetailPageClient({ params }: { params: { id: stri
                       <Card className="overflow-hidden">
                         <div className="relative w-full aspect-[4/3]">
                           <Image
-                            src={image.imageUrl}
+                            src={image}
                             alt={`${listing.cropType} image ${index + 1}`}
                             fill
+                            unoptimized
                             className="object-cover"
                             priority={index === 0}
                           />

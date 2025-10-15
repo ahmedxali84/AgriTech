@@ -24,7 +24,7 @@ export function CropCard({ listing }: CropCardProps) {
   const { user: currentUser } = useAuthUser();
   const router = useRouter();
   const isOwnListing = currentUser?.uid === listing.farmerId;
-  const firstImage = listing.images && listing.images.length > 0 ? listing.images[0] : { imageUrl: "https://picsum.photos/seed/placeholder/600/400", imageHint: "placeholder" };
+  const firstImage = listing.images && listing.images.length > 0 ? listing.images[0] : "https://picsum.photos/seed/placeholder/600/400";
 
 
   return (
@@ -32,12 +32,13 @@ export function CropCard({ listing }: CropCardProps) {
       <CardHeader className="p-0 relative">
         <Link href={`/market/${listing.id}`} className="block">
           <Image
-            src={firstImage.imageUrl}
+            src={firstImage}
             alt={listing.cropType}
             width={600}
             height={400}
+            unoptimized
             className="object-cover w-full h-48 transition-transform duration-300 group-hover:scale-105"
-            data-ai-hint={firstImage.imageHint}
+            data-ai-hint={listing.cropType.toLowerCase()}
           />
         </Link>
         {listing.aiVerified && (

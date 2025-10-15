@@ -1,4 +1,3 @@
-import type { ImagePlaceholder } from "./placeholder-images";
 
 export type User = {
   id: string;
@@ -17,6 +16,12 @@ export type User = {
   country?: string;
 };
 
+export type CropImage = {
+  id: string;
+  imageUrl: string;
+  imageHint: string;
+}
+
 export type CropListing = {
   id: string;
   farmerId: string;
@@ -26,11 +31,11 @@ export type CropListing = {
   location: string;
   city?: string;
   country?: string;
-  images: ImagePlaceholder[];
+  images: string[];
   qualityNotes?: string;
   status: 'Listed' | 'Negotiating' | 'Sold' | 'Paid';
   aiVerified: boolean;
-  listingDate: string; // Changed from Timestamp
+  listingDate: string; 
 };
 
 export type Deal = {

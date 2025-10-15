@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Sparkles, UploadCloud, ImagePlus, ArrowLeft } from 'lucide-react';
+import { Loader2, Sparkles, ImagePlus, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateCropQualityNotes } from '@/ai/flows/generate-crop-quality-notes';
 import { useUser } from '@/firebase';
@@ -69,8 +69,8 @@ export default function EditListingPage({ params }: { params: { id: string } }) 
           const currentDataUris = [null, null, null];
           foundListing.images.forEach((img, i) => {
               if (i < 3) {
-                  currentPreviews[i] = img.imageUrl;
-                  currentDataUris[i] = img.imageUrl;
+                  currentPreviews[i] = img;
+                  currentDataUris[i] = img;
               }
           });
           setPreviews(currentPreviews);
@@ -133,20 +133,16 @@ export default function EditListingPage({ params }: { params: { id: string } }) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!listing || !cropType || !quantity || !price || dataUris.some(uri => uri === null)) {
+    if (!listing || !cropType || !quantity || !price || !dataUris[0] || !dataUris[1] || !dataUris[2]) {
       toast({ variant: 'destructive', title: 'Incomplete Form', description: 'Please fill out all fields and upload all three images.' });
       return;
     }
 
     setIsSubmitting(true);
     
-    const imagesToSave = dataUris.map((uri, index) => ({
-      id: `image-${Date.now()}-${index}`,
-      imageUrl: uri!,
-      imageHint: cropType.toLowerCase(),
-    }));
+    const imagesToSave = dataUris.filter((uri): uri is string => uri !== null);
 
-    const updatedListing = {
+    const updatedListing: CropListing = {
         ...listing,
         cropType: cropType,
         quantity: Number(quantity),
@@ -231,7 +227,7 @@ export default function EditListingPage({ params }: { params: { id: string } }) 
                   <div key={index} className="grid gap-2">
                     <Label htmlFor={`crop-image-${index}`} className="border-2 border-dashed border-muted-foreground/50 rounded-lg aspect-video flex flex-col items-center justify-center text-center cursor-pointer hover:bg-accent relative overflow-hidden">
                       {previews[index] ? (
-                        <Image src={previews[index]!} alt={`Crop preview ${index + 1}`} fill className="object-cover" />
+                        <Image src={previews[index]!} alt={`Crop preview ${index + 1}`} fill unoptimized className="object-cover" />
                       ) : (
                         <><ImagePlus className="w-10 h-10 text-muted-foreground" /><span className="mt-2 text-sm font-semibold">Upload Image {index + 1}</span></>
                       )}
@@ -260,7 +256,7 @@ export default function EditListingPage({ params }: { params: { id: string } }) 
             </CardContent>
             <CardFooter>
                 <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <><UploadCloud className="mr-2 h-4 w-4" />Save Changes</>}
+                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <>Save Changes</>}
                 </Button>
             </CardFooter>
           </Card>

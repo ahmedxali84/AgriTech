@@ -99,7 +99,7 @@ export default function NewListingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!authUser || !cropType || !quantity || !price || dataUris.some(uri => uri === null)) {
+    if (!authUser || !cropType || !quantity || !price || !dataUris[0] || !dataUris[1] || !dataUris[2]) {
       toast({
         variant: 'destructive',
         title: 'Incomplete Form',
@@ -109,13 +109,7 @@ export default function NewListingPage() {
     }
     setIsSubmitting(true);
     
-    const imagesToSave = dataUris.map((uri, index) => {
-      return {
-        id: `image-${Date.now()}-${index}`,
-        imageUrl: uri!,
-        imageHint: cropType.toLowerCase(),
-      };
-    });
+    const imagesToSave = dataUris.filter((uri): uri is string => uri !== null);
     
     const newListing: CropListing = {
       id: `crop-${Date.now()}`,
@@ -227,6 +221,7 @@ export default function NewListingPage() {
                           src={previews[index]!}
                           alt={`Crop preview ${index + 1}`}
                           fill
+                          unoptimized
                           className="object-cover"
                         />
                       ) : (

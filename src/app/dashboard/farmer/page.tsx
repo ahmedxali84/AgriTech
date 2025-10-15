@@ -180,7 +180,7 @@ export default function FarmerDashboard() {
                          <Avatar className="hidden h-12 w-12 sm:flex rounded-md">
                            {listing.images && listing.images.length > 0 ? (
                               <AvatarImage
-                                src={listing.images[0].imageUrl}
+                                src={listing.images[0]}
                                 alt={listing.cropType}
                                 className="object-cover"
                               />
