@@ -17,7 +17,9 @@ interface CropCardProps {
 }
 
 export function CropCard({ listing }: CropCardProps) {
-  const firstImage = listing.images && listing.images.length > 0 ? listing.images[0] : "https://picsum.photos/seed/placeholder/600/400";
+  const firstImage = (listing.images && listing.images.length > 0 && listing.images[0]) 
+                     ? listing.images[0] 
+                     : "https://picsum.photos/seed/placeholder/600/400";
 
 
   return (
