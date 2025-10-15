@@ -17,10 +17,10 @@ interface CropCardProps {
 }
 
 export function CropCard({ listing }: CropCardProps) {
-  // Ensure that firstImage is a non-empty string, otherwise use a placeholder.
-  const firstImage = listing.images && listing.images.length > 0 && listing.images[0]
-                     ? listing.images[0]
-                     : "https://picsum.photos/seed/placeholder/600/400";
+  // This logic ensures that `firstImage` is always a valid URL.
+  // It checks if the `images` array exists, has items, and the first item is a non-empty string.
+  // If not, it provides a default placeholder URL.
+  const firstImage = listing.images?.[0] || "https://picsum.photos/seed/placeholder/600/400";
 
   return (
     <Card className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full flex flex-col w-full">
