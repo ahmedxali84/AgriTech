@@ -17,10 +17,10 @@ interface CropCardProps {
 }
 
 export function CropCard({ listing }: CropCardProps) {
-  const firstImage = (listing.images && listing.images.length > 0 && listing.images[0]) 
-                     ? listing.images[0] 
+  // Ensure that firstImage is a non-empty string, otherwise use a placeholder.
+  const firstImage = listing.images && listing.images.length > 0 && listing.images[0]
+                     ? listing.images[0]
                      : "https://picsum.photos/seed/placeholder/600/400";
-
 
   return (
     <Card className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full flex flex-col w-full">
