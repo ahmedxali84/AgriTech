@@ -10,9 +10,8 @@ import {
 } from '@/components/ui/select';
 import { useUser } from '@/firebase';
 import type { CropListing } from '@/lib/types';
-import { Loader2, Search, AlertTriangle } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { countries as allCountries } from '@/lib/countries';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { defaultCrops } from '@/lib/default-crops';

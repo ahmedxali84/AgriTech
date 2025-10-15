@@ -6,7 +6,6 @@ import {
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
 import {
-  LayoutGrid,
   PlusCircle,
   ShoppingBag,
   Settings,
@@ -49,8 +48,7 @@ export function DashboardNav() {
     return null;
   }
 
-  // Force farmer navigation to be shown to satisfy user request.
-  const navItems = farmerNav;
+  const navItems = userProfile.role === 'farmer' ? farmerNav : retailerNav;
 
   return (
      <SidebarMenu>

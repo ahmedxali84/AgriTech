@@ -26,7 +26,7 @@ import {
   AuthError,
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { Loader2, Leaf } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Icons } from '@/components/icons';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -207,7 +207,7 @@ export default function LoginPage() {
           <Image
             src={loginImage.imageUrl}
             alt="Image"
-            layout="fill"
+            fill
             className="object-cover dark:brightness-[0.3]"
             data-ai-hint={loginImage.imageHint}
           />

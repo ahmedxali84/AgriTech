@@ -3,7 +3,6 @@
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
 } from '@/components/ui/card';
 import Image from 'next/image';
@@ -12,18 +11,12 @@ import { MapPin } from 'lucide-react';
 import type { CropListing } from '@/lib/types';
 import Link from 'next/link';
 import { Icons } from '../icons';
-import { useUser as useAuthUser } from '@/firebase';
-import { Button } from '../ui/button';
-import { useRouter } from 'next/navigation';
 
 interface CropCardProps {
   listing: CropListing & { id: string };
 }
 
 export function CropCard({ listing }: CropCardProps) {
-  const { user: currentUser } = useAuthUser();
-  const router = useRouter();
-  const isOwnListing = currentUser?.uid === listing.farmerId;
   const firstImage = listing.images && listing.images.length > 0 ? listing.images[0] : "https://picsum.photos/seed/placeholder/600/400";
 
 
