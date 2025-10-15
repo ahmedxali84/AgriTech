@@ -43,16 +43,14 @@ const testimonials = [
   {
     name: 'Amanpreet Singh',
     role: 'Farmer, Punjab',
-    avatar:
-      PlaceHolderImages.find(img => img.id === 'testimonial1')?.imageUrl || '',
+    avatarId: 'user-farmer-avatar',
     avatarFallback: 'AS',
     text: 'For the first time, I feel my hard work is truly seen. The AI verification gives me the credibility to demand a fair price, and I have found buyers I never could have reached before. AgriLink AI has honored my craft.',
   },
   {
     name: 'Riya Gupta',
     role: 'Retailer, Delhi',
-    avatar:
-      PlaceHolderImages.find(img => img.id === 'testimonial2')?.imageUrl || '',
+    avatarId: 'user-retailer-avatar',
     avatarFallback: 'RG',
     text: 'Trust is everything in this business. Sourcing used to be a gamble. Now, with AI-verified quality and transparent farmer profiles, I buy with absolute confidence. It has saved me time, money, and countless headaches.',
   },
@@ -169,27 +167,30 @@ export default function Home() {
               </p>
             </div>
              <div className="mx-auto mt-12 grid max-w-5xl gap-8 md:grid-cols-1 lg:grid-cols-2">
-                {testimonials.map((testimonial, index) => (
-                  <Card key={index} className="transform border-none bg-card shadow-lg transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl">
-                    <CardContent className="flex h-full flex-col items-start p-8">
-                      <p className="mb-6 flex-grow text-lg italic text-foreground/80">
-                        "{testimonial.text}"
-                      </p>
-                       <div className="flex w-full items-center gap-4 border-t border-border pt-6">
-                         <Avatar className="h-16 w-16 border-2 border-primary/50">
-                            <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-                            <AvatarFallback>{testimonial.avatarFallback}</AvatarFallback>
-                          </Avatar>
-                           <div>
-                              <div className="text-lg font-bold font-headline">{testimonial.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {testimonial.role}
-                              </div>
-                           </div>
-                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                {testimonials.map((testimonial, index) => {
+                    const avatarImage = PlaceHolderImages.find(img => img.id === testimonial.avatarId);
+                    return (
+                        <Card key={index} className="transform border-none bg-card shadow-lg transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl">
+                            <CardContent className="flex h-full flex-col items-start p-8">
+                            <p className="mb-6 flex-grow text-lg italic text-foreground/80">
+                                "{testimonial.text}"
+                            </p>
+                            <div className="flex w-full items-center gap-4 border-t border-border pt-6">
+                                <Avatar className="h-16 w-16 border-2 border-primary/50">
+                                    {avatarImage && <AvatarImage src={avatarImage.imageUrl} alt={testimonial.name} />}
+                                    <AvatarFallback>{testimonial.avatarFallback}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <div className="text-lg font-bold font-headline">{testimonial.name}</div>
+                                    <div className="text-sm text-muted-foreground">
+                                        {testimonial.role}
+                                    </div>
+                                </div>
+                            </div>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
             </div>
           </div>
         </section>

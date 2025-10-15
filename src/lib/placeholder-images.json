@@ -7,33 +7,21 @@
       "imageHint": "sunrise farm"
     },
     {
-      "id": "testimonial1",
-      "description": "Portrait of a smiling farmer.",
-      "imageUrl": "https://picsum.photos/seed/101/100/100",
-      "imageHint": "man portrait"
+      "id": "login-hero",
+      "description": "A field of wheat ready for harvest.",
+      "imageUrl": "https://images.unsplash.com/photo-1507693901637-32311835973c?q=80&w=1974&auto=format&fit=crop",
+      "imageHint": "wheat harvest"
     },
     {
-      "id": "testimonial2",
-      "description": "Portrait of a professional retailer.",
-      "imageUrl": "https://picsum.photos/seed/102/100/100",
-      "imageHint": "woman portrait"
-    },
-    {
-      "id": "testimonial3",
-      "description": "Portrait of another farmer.",
-      "imageUrl": "https://picsum.photos/seed/103/100/100",
-      "imageHint": "man portrait"
-    },
-    {
-      "id": "user1",
+      "id": "user-farmer-avatar",
       "description": "Avatar for a farmer user.",
-      "imageUrl": "https://picsum.photos/seed/201/100/100",
+      "imageUrl": "https://picsum.photos/seed/farmer-avatar/100/100",
       "imageHint": "man portrait"
     },
     {
-      "id": "user2",
+      "id": "user-retailer-avatar",
       "description": "Avatar for a retailer user.",
-      "imageUrl": "https://picsum.photos/seed/202/100/100",
+      "imageUrl": "https://picsum.photos/seed/retailer-avatar/100/100",
       "imageHint": "woman portrait"
     },
     {

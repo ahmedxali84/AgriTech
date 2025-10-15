@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -47,7 +48,7 @@ export default function LoginPage() {
   const router = useRouter();
   const auth = useAuth();
   const firestore = useFirestore();
-  const loginImage = PlaceHolderImages.find(p => p.id === 'hero');
+  const loginImage = PlaceHolderImages.find(p => p.id === 'login-hero');
 
   const handleAuthAction = async () => {
     if (!auth || !firestore) {
@@ -68,7 +69,9 @@ export default function LoginPage() {
         );
         const user = userCredential.user;
 
-        const avatarPlaceholder = role === 'farmer' ? PlaceHolderImages.find(p => p.id === 'user1')! : PlaceHolderImages.find(p => p.id === 'user2')!
+        const avatarPlaceholderId = role === 'farmer' ? 'user-farmer-avatar' : 'user-retailer-avatar';
+        const avatarPlaceholder = PlaceHolderImages.find(p => p.id === avatarPlaceholderId);
+
 
         // Create user profile in Firestore
         await setDoc(doc(firestore, 'users', user.uid), {
@@ -79,7 +82,7 @@ export default function LoginPage() {
           location: 'Unknown',
           verification: 'New',
           reputation: 70,
-          avatar: avatarPlaceholder.imageUrl,
+          avatar: avatarPlaceholder?.imageUrl || '',
           avatarFallback: name.substring(0, 2).toUpperCase(),
         });
         toast({ title: 'Account created successfully!' });
