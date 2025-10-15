@@ -49,14 +49,20 @@ export default function ListingDetailPageClient({ params }: { params: { id: stri
   const [crops] = useLocalStorage<CropListing[]>('crops', []);
   const [listing, setListing] = useState<CropListing | null>(null);
   const [isListingLoading, setIsListingLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
     const foundListing = crops.find(c => c.id === params.id);
     if (foundListing) {
       setListing(foundListing);
     }
     setIsListingLoading(false);
-  }, [params.id, crops]);
+  }, [params.id, crops, isClient]);
 
   const userRef = useMemoFirebase(
     () => (firestore && listing ? doc(firestore, 'users', listing.farmerId) : null),
@@ -64,7 +70,7 @@ export default function ListingDetailPageClient({ params }: { params: { id: stri
   );
   const { data: farmerProfile, isLoading: isFarmerLoading } = useDoc<User>(userRef);
   
-  const isLoading = isListingLoading || isFarmerLoading;
+  const isLoading = !isClient || isListingLoading || isFarmerLoading;
   const isOwnListing = authUser?.uid === listing?.farmerId;
 
   if (isLoading) {

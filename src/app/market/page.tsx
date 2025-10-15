@@ -23,8 +23,15 @@ export default function MarketPage() {
   const router = useRouter();
   const [cropListings, setCropListings] = useLocalStorage<CropListing[]>('crops', []);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+    
     setIsLoading(true);
     // Initialize with default crops if local storage is empty
     if (cropListings.length === 0) {
@@ -33,7 +40,7 @@ export default function MarketPage() {
         setCropListings(initialCrops);
     }
     setIsLoading(false);
-  }, [user, cropListings.length, setCropListings]);
+  }, [user, cropListings.length, setCropListings, isClient]);
 
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -83,7 +90,7 @@ export default function MarketPage() {
   }, [cropListings, searchTerm, selectedCountry, sortOrder]);
   
   const renderContent = () => {
-    if (isLoading) {
+    if (!isClient || isLoading) {
       return (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />

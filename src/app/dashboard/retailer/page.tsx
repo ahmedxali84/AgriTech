@@ -17,23 +17,27 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import { defaultCrops } from '@/lib/default-crops';
 
 export default function RetailerDashboard() {
-  const { user, isUserLoading } = useUser();
-  const [cropListings, setCropListings] = useLocalStorage<CropListing[]>('crops', []);
+  const { user } = useUser();
+  const [allCrops, setAllCrops] = useLocalStorage<CropListing[]>('crops', []);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     setIsLoading(true);
-    if (!isUserLoading && cropListings) {
-        // Initialize with default crops if local storage is empty
-        if (cropListings.length === 0) {
-            // We assign a farmerId from the current user, or a dummy one if no user is logged in
-            const initialCrops = defaultCrops.map(c => ({...c, farmerId: user?.uid || 'default-farmer'}));
-            setCropListings(initialCrops);
-        }
+    // Initialize with default crops if local storage is empty
+    if (allCrops.length === 0) {
+        // We assign a farmerId from the current user, or a dummy one if no user is logged in
+        const initialCrops = defaultCrops.map(c => ({...c, farmerId: user?.uid || 'default-farmer'}));
+        setAllCrops(initialCrops);
     }
     setIsLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isUserLoading]);
+  }, [user, allCrops.length, setAllCrops, isClient]);
 
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,8 +45,8 @@ export default function RetailerDashboard() {
   const [sortOrder, setSortOrder] = useState('recent');
     
   const countries = useMemo(() => {
-    if (!cropListings) return [];
-    const countryNames = new Set(cropListings.map(l => l.country).filter(Boolean));
+    if (!allCrops) return [];
+    const countryNames = new Set(allCrops.map(l => l.country).filter(Boolean));
     const combinedCountries = [...allCountries];
 
     allCountries.forEach(c => {
@@ -52,12 +56,12 @@ export default function RetailerDashboard() {
     });
 
     return combinedCountries.sort((a,b) => a.name.localeCompare(b.name));
-  }, [cropListings]);
+  }, [allCrops]);
 
   const filteredAndSortedListings = useMemo(() => {
-    if (!cropListings) return [];
+    if (!allCrops) return [];
     
-    let filtered = cropListings.filter(l => l.status === 'Listed');
+    let filtered = allCrops.filter(l => l.status === 'Listed');
 
     if (searchTerm) {
         filtered = filtered.filter((listing) =>
@@ -79,10 +83,10 @@ export default function RetailerDashboard() {
             return filtered;
     }
 
-  }, [cropListings, searchTerm, selectedCountry, sortOrder]);
+  }, [allCrops, searchTerm, selectedCountry, sortOrder]);
   
   const renderContent = () => {
-    if (isLoading) {
+    if (!isClient || isLoading) {
       return (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />

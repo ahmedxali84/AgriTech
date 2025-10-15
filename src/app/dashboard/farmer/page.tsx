@@ -48,30 +48,37 @@ export default function FarmerDashboard() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
 
+  // useLocalStorage is safe here because this entire component is a client component.
+  // The logic inside will handle window availability.
   const [allCrops, setAllCrops] = useLocalStorage<CropListing[]>('crops', []);
   const [userCrops, setUserCrops] = useState<CropListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // This effect runs only on the client, after the component mounts.
     setIsLoading(true);
-    if (!isUserLoading && allCrops) {
-        if (user) {
-            // Initialize with default crops if local storage is empty
-            if (allCrops.length === 0) {
-                const initialCrops = defaultCrops.map(c => ({...c, farmerId: user.uid}));
-                setAllCrops(initialCrops);
-                setUserCrops(initialCrops);
-            } else {
-                setUserCrops(allCrops.filter(c => c.farmerId === user.uid));
-            }
-        } else if (allCrops.length === 0) {
-            // Edge case for first load with no user and no crops in localstorage
-            setAllCrops([]);
+    if (!isUserLoading && user) {
+        // We can safely access localStorage-backed state now.
+        if (allCrops.length === 0) {
+            const initialCrops = defaultCrops.map(c => ({...c, farmerId: user.uid}));
+            setAllCrops(initialCrops); // This will trigger a re-render
+        } else {
+            setUserCrops(allCrops.filter(c => c.farmerId === user.uid));
         }
+    } else if (!isUserLoading && !user) {
+        // User is not logged in, no crops to show.
+        setUserCrops([]);
     }
     setIsLoading(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isUserLoading]);
+  }, [user, isUserLoading, allCrops, setAllCrops]);
+  
+  useEffect(() => {
+    // This effect reacts to changes in allCrops (e.g., after initialization)
+    // and filters them for the current user.
+    if(user){
+      setUserCrops(allCrops.filter(c => c.farmerId === user.uid));
+    }
+  }, [allCrops, user]);
 
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -107,6 +114,15 @@ export default function FarmerDashboard() {
   const totalRevenue = userCrops?.filter(l => l.status === 'Sold').reduce((acc, l) => acc + l.price * l.quantity, 0) || 0;
   const activeListings = userCrops?.filter(l => l.status === 'Listed').length || 0;
 
+  const PageLoader = () => (
+    <div className="flex h-[50vh] w-full items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+    </div>
+  );
+
+  if (isLoading || isUserLoading) {
+      return <PageLoader />;
+  }
 
   return (
     <>
@@ -166,13 +182,7 @@ export default function FarmerDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading || isUserLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24">
-                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-                  </TableCell>
-                </TableRow>
-              ) : userCrops && userCrops.length > 0 ? (
+              {userCrops && userCrops.length > 0 ? (
                 userCrops.map((listing) => (
                   <TableRow key={listing.id}>
                     <TableCell>
