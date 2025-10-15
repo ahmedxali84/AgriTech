@@ -1,5 +1,4 @@
 import type { CropListing } from './types';
-import { PlaceHolderImages } from './placeholder-images';
 
 export const defaultCrops: Omit<CropListing, 'farmerId'>[] = [
   {

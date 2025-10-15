@@ -7,7 +7,7 @@ import {
   BrainCircuit,
   Leaf,
   Store,
-  UploadCloud,
+  Github,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -85,18 +85,18 @@ export default function Home() {
 
       <main className="flex-1">
         <section className="relative flex h-[90vh] min-h-[700px] w-full items-center justify-center">
-          <div className="absolute inset-0 bg-black/50 z-0"></div>
+          <div className="absolute inset-0 bg-black/50 z-10"></div>
           {heroImage && (
             <Image
               src={heroImage.imageUrl}
               alt="A farmer holding soil in their hands in a lush field"
               fill
-              className="object-cover -z-10"
+              className="object-cover"
               priority
               data-ai-hint={heroImage.imageHint}
             />
           )}
-          <div className="container relative mx-auto px-4 text-center sm:px-6 lg:px-8">
+          <div className="container relative z-20 mx-auto px-4 text-center sm:px-6 lg:px-8">
             <div className="mx-auto max-w-4xl">
               <div className="fade-in-up">
                  <h1 className="text-4xl font-extrabold tracking-tight text-white md:text-6xl lg:text-7xl font-headline text-shadow-lg">
@@ -229,6 +229,15 @@ export default function Home() {
               prefetch={false}
             >
               Privacy Policy
+            </Link>
+            <Link
+              href="https://github.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground transition-colors hover:text-primary"
+            >
+              <Github className="h-5 w-5" />
+              <span className="sr-only">GitHub</span>
             </Link>
           </div>
         </div>
