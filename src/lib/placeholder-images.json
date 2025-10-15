@@ -1,0 +1,70 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero",
+      "description": "Lush green farm fields under a bright sun.",
+      "imageUrl": "https://images.unsplash.com/photo-1499529112087-3cb3b73cec95?q=80&w=1974&auto=format&fit=crop",
+      "imageHint": "sunrise farm"
+    },
+    {
+      "id": "testimonial1",
+      "description": "Portrait of a smiling farmer.",
+      "imageUrl": "https://picsum.photos/seed/101/100/100",
+      "imageHint": "man portrait"
+    },
+    {
+      "id": "testimonial2",
+      "description": "Portrait of a professional retailer.",
+      "imageUrl": "https://picsum.photos/seed/102/100/100",
+      "imageHint": "woman portrait"
+    },
+    {
+      "id": "testimonial3",
+      "description": "Portrait of another farmer.",
+      "imageUrl": "https://picsum.photos/seed/103/100/100",
+      "imageHint": "man portrait"
+    },
+    {
+      "id": "user1",
+      "description": "Avatar for a farmer user.",
+      "imageUrl": "https://picsum.photos/seed/201/100/100",
+      "imageHint": "man portrait"
+    },
+    {
+      "id": "user2",
+      "description": "Avatar for a retailer user.",
+      "imageUrl": "https://picsum.photos/seed/202/100/100",
+      "imageHint": "woman portrait"
+    },
+    {
+      "id": "crop-wheat1",
+      "description": "Close-up of golden wheat grains.",
+      "imageUrl": "https://picsum.photos/seed/301/600/400",
+      "imageHint": "wheat grain"
+    },
+    {
+      "id": "crop-rice1",
+      "description": "Pile of white rice grains.",
+      "imageUrl": "https://picsum.photos/seed/302/600/400",
+      "imageHint": "rice grain"
+    },
+    {
+      "id": "crop-corn1",
+      "description": "Fresh corn on the cob.",
+      "imageUrl": "https://picsum.photos/seed/303/600/400",
+      "imageHint": "corn cob"
+    },
+    {
+      "id": "crop-barley1",
+      "description": "Field of barley.",
+      "imageUrl": "https://picsum.photos/seed/304/600/400",
+      "imageHint": "barley field"
+    },
+    {
+      "id": "map",
+      "description": "Map view showing crop locations.",
+      "imageUrl": "https://picsum.photos/seed/401/1200/800",
+      "imageHint": "map illustration"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+/**
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a user-ownership model for user profiles and allows public read access with owner-only writes for crop listings.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profile data, accessible only by the authenticated user with the matching ID.
+ * - /crops/{cropId}: Stores crop listings, publicly readable, but only the owner can create, update, or delete them.
+ *
+ * Key Security Decisions:
+ * - Users can only access their own profile data.
+ * - Crop listings are publicly readable, but write access is restricted to the owner.
+ * - The 'id' field in the user document must match the userId in the path.
+ * - It is impossible to list all users in the database.
+ *
+ * Denormalization for Authorization:
+ * - Crop documents have a 'farmerId' field, which is used to check ownership for write operations. This avoids having to query a separate collection to determine ownership.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Controls access to user profile documents.
+     * @path /users/{userId}
+     * @allow (get, create, update, delete): Authenticated user with matching userId.
+     * @deny (get, create, update, delete): Any other user.
+     * @principle Enforces document ownership for user profiles.
+     */
+    match /users/{userId} {
+      // Helper function to check if the authenticated user is the owner of the document.
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      // Helper function to check if the authenticated user is the owner and the document exists.
+      function isExistingOwner(userId) {
+        return isOwner(userId) && exists(resource);
+      }
+
+      // Allow a user to get their own profile.
+      allow get: if isOwner(userId);
+
+      // Allow a user to create their own profile, but require that the ID in the document matches their user ID.
+      allow create: if isOwner(userId) && request.resource.data.id == request.auth.uid;
+
+      // Allow a user to update their own profile, but enforce that the 'id' field cannot be changed.
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+
+      // Allow a user to delete their own profile.
+      allow delete: if isExistingOwner(userId);
+
+      // A user can list their own user documents.
+      allow list: if false;
+    }
+
+    /**
+     * @description Controls access to crop listing documents. Allows public read access but restricts write access to the owner.
+     * @path /crops/{cropId}
+     * @allow (get, list): Any user (publicly readable).
+     * @allow (create): Authenticated user creating a new crop listing where farmerId matches their user ID.
+     * @allow (update, delete): Authenticated user who is the owner of the crop listing.
+     * @deny (create, update, delete): Any other user.
+     * @principle Allows public read access for crop listings while enforcing document ownership for writes.
+     */
+    match /crops/{cropId} {
+      // Helper function to check if the authenticated user is the owner of the crop document.
+      function isOwner() {
+        return request.auth.uid == resource.data.farmerId;
+      }
+
+      // Helper function to check if the authenticated user is the owner and the document exists.
+      function isExistingOwner() {
+        return isOwner() && exists(resource);
+      }
+
+      // Allow anyone to read (get) a crop listing.
+      allow get: if true;
+
+      // Allow anyone to list crop listings.
+      allow list: if true;
+
+      // Allow an authenticated user to create a crop listing, provided that the farmerId matches their user ID.
+      allow create: if isSignedIn() && request.resource.data.farmerId == request.auth.uid;
+
+      // Allow the owner of the crop listing to update it, but only if the document exists.
+      allow update: if isExistingOwner();
+
+      // Allow the owner of the crop listing to delete it, but only if the document exists.
+      allow delete: if isExistingOwner();
+    }
+
+    // isSignedIn function
+    function isSignedIn() {
+        return request.auth != null;
+    }
+  }
+}

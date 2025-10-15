@@ -1,0 +1,179 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the AgriLink AI platform, either a farmer or a retailer.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user.",
+          "format": "uuid"
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user.",
+          "enum": [
+            "farmer",
+            "retailer"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "The user's phone number."
+        },
+        "address": {
+          "type": "string",
+          "description": "The user's street address."
+        },
+        "city": {
+          "type": "string",
+          "description": "The city where the user is located."
+        },
+        "state": {
+          "type": "string",
+          "description": "The state or province where the user is located."
+        },
+        "country": {
+          "type": "string",
+          "description": "The country where the user is located."
+        },
+        "companyName": {
+          "type": "string",
+          "description": "The name of the user's company, if applicable."
+        },
+        "verificationStatus": {
+          "type": "string",
+          "description": "Status of user verification (e.g., 'Verified', 'Pending', 'Unverified')."
+        },
+        "trustScore": {
+          "type": "number",
+          "description": "A numerical score representing the user's trustworthiness."
+        },
+        "avatar": {
+          "type": "string",
+          "description": "URL to the user's avatar image."
+        },
+        "avatarFallback": {
+            "type": "string",
+            "description": "Fallback text for the avatar."
+        },
+        "location": {
+          "type": "string",
+          "description": "A combined string of city and country for display purposes."
+        },
+        "reputation": {
+            "type": "number",
+            "description": "User reputation score."
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "name",
+        "email"
+      ]
+    },
+    "Crop": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Crop",
+      "type": "object",
+      "description": "Represents a crop listing uploaded by a farmer.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the crop listing.",
+          "format": "uuid"
+        },
+        "farmerId": {
+          "type": "string",
+          "description": "Reference to the User who created the crop listing."
+        },
+        "cropType": {
+          "type": "string",
+          "description": "The name of the crop (e.g., 'Wheat', 'Rice')."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the crop available (e.g., in tons)."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price per unit of the crop."
+        },
+        "location": {
+          "type": "string",
+          "description": "The location where the crop is grown."
+        },
+        "city": {
+          "type": "string",
+          "description": "The city where the crop is located."
+        },
+        "country": {
+          "type": "string",
+          "description": "The country where the crop is located."
+        },
+        "images": {
+          "type": "array",
+          "description": "URLs of images of the crop.",
+          "items": {
+            "type": "object",
+             "properties": {
+                "id": {"type": "string"},
+                "imageUrl": {"type": "string"},
+                "imageHint": {"type": "string"}
+             }
+          }
+        },
+        "qualityNotes": {
+          "type": "string",
+          "description": "AI-generated quality notes about the crop."
+        },
+        "listingDate": {
+          "type": "string",
+          "description": "The date when the crop listing was created.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the crop listing (e.g., 'Listed', 'Sold')."
+        },
+        "aiVerified": {
+            "type": "boolean",
+            "description": "Whether the quality notes were AI-generated."
+        }
+      },
+      "required": [
+        "id",
+        "farmerId",
+        "cropType",
+        "quantity",
+        "price"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "Stores user profile data. Accessible only by the authenticated user with matching userId."
+    }
+  }
+}

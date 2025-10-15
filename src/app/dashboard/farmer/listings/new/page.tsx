@@ -1,0 +1,304 @@
+'use client';
+
+import { useState } from 'react';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Loader2, Sparkles, UploadCloud, ImagePlus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { generateCropQualityNotes } from '@/ai/flows/generate-crop-quality-notes';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import type { CropListing } from '@/lib/types';
+import { useLocalStorage } from '@/hooks/use-local-storage';
+
+export default function NewListingPage() {
+  const { user: authUser, isUserLoading } = useUser();
+  const router = useRouter();
+
+  const [crops, setCrops] = useLocalStorage<CropListing[]>('crops', []);
+
+  const [previews, setPreviews] = useState<(string | null)[]>([null, null, null]);
+  const [dataUris, setDataUris] = useState<(string | null)[]>([null, null, null]);
+  const [qualityNotes, setQualityNotes] = useState('');
+  const [isLoadingNotes, setIsLoadingNotes] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cropType, setCropType] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [price, setPrice] = useState('');
+
+  const { toast } = useToast();
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setPreviews(prev => {
+          const newPreviews = [...prev];
+          newPreviews[index] = result;
+          return newPreviews;
+        });
+        setDataUris(prev => {
+          const newDataUris = [...prev];
+          newDataUris[index] = result;
+          return newDataUris;
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleGenerateNotes = async () => {
+    if (!dataUris[0] || !cropType) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing Information',
+        description:
+          'Please upload at least the first crop image and select the crop type.',
+      });
+      return;
+    }
+    setIsLoadingNotes(true);
+    setQualityNotes('');
+    try {
+      const result = await generateCropQualityNotes({
+        cropPhotoDataUri: dataUris[0],
+        cropType,
+      });
+      setQualityNotes(result.qualityNotes);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'AI Analysis Failed',
+        description: 'Could not generate quality notes. Please try again.',
+      });
+    } finally {
+      setIsLoadingNotes(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authUser || !cropType || !quantity || !price || dataUris.some(uri => uri === null)) {
+      toast({
+        variant: 'destructive',
+        title: 'Incomplete Form',
+        description: 'Please fill out all fields and upload all three images.',
+      });
+      return;
+    }
+    setIsSubmitting(true);
+    
+    const imagesToSave = dataUris.map((uri, index) => {
+      return {
+        id: `image-${Date.now()}-${index}`,
+        imageUrl: uri!,
+        imageHint: cropType.toLowerCase(),
+      };
+    });
+    
+    const newListing: CropListing = {
+      id: `crop-${Date.now()}`,
+      farmerId: authUser.uid,
+      cropType: cropType,
+      quantity: Number(quantity),
+      price: Number(price),
+      location: `Unknown Location`,
+      city: 'Unknown',
+      country: 'Unknown',
+      images: imagesToSave,
+      qualityNotes: qualityNotes,
+      status: 'Listed',
+      listingDate: new Date().toISOString(),
+      aiVerified: qualityNotes !== '',
+    };
+    
+    setCrops(prevCrops => [...prevCrops, newListing]);
+    
+    toast({
+      title: 'Listing Published!',
+      description: `${cropType} has been listed on the marketplace.`,
+    });
+
+    setIsSubmitting(false);
+    router.push('/dashboard/farmer');
+  };
+
+  if (isUserLoading) {
+    return <div className="flex h-screen w-full items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
+  }
+
+  return (
+    <>
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight font-headline">
+          Create New Listing
+        </h2>
+        <p className="text-muted-foreground">
+          Fill in the details below to list your crops on the marketplace.
+        </p>
+      </div>
+      <form className="grid md:grid-cols-3 gap-8 items-start mt-6" onSubmit={handleSubmit}>
+        <div className="md:col-span-2 grid gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Crop Details</CardTitle>
+              <CardDescription>
+                Provide the basic information about your produce.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="cropType">Crop Type</Label>
+                  <Select onValueChange={setCropType} value={cropType}>
+                    <SelectTrigger id="cropType">
+                      <SelectValue placeholder="Select crop type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Wheat">Wheat</SelectItem>
+                      <SelectItem value="Rice">Rice</SelectItem>
+                      <SelectItem value="Corn">Corn</SelectItem>
+                      <SelectItem value="Barley">Barley</SelectItem>
+                      <SelectItem value="Soybean">Soybean</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="quantity">Quantity (in tons)</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    placeholder="e.g., 10"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="price">Price (per ton)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  placeholder="e.g., 250"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Crop Images</CardTitle>
+              <CardDescription>
+                Upload three photos of your crop. Good photos help build trust.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[0, 1, 2].map(index => (
+                  <div key={index} className="grid gap-2">
+                    <Label
+                      htmlFor={`crop-image-${index}`}
+                      className="border-2 border-dashed border-muted-foreground/50 rounded-lg aspect-video flex flex-col items-center justify-center text-center cursor-pointer hover:bg-accent relative overflow-hidden"
+                    >
+                      {previews[index] ? (
+                        <Image
+                          src={previews[index]!}
+                          alt={`Crop preview ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <>
+                          <ImagePlus className="w-10 h-10 text-muted-foreground" />
+                          <span className="mt-2 text-sm font-semibold">
+                            Upload Image {index + 1}
+                          </span>
+                        </>
+                      )}
+                      <Input
+                        id={`crop-image-${index}`}
+                        type="file"
+                        className="sr-only"
+                        onChange={(e) => handleFileChange(e, index)}
+                        accept="image/*"
+                      />
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="grid gap-6">
+          <Card className="sticky top-20">
+            <CardHeader>
+              <CardTitle>AI Quality Assistant</CardTitle>
+              <CardDescription>
+                Generate quality notes from your first image to make your listing stand out.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <Button
+                type="button"
+                onClick={handleGenerateNotes}
+                disabled={isLoadingNotes || !previews[0] || !cropType}
+              >
+                {isLoadingNotes ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                Generate AI Notes
+              </Button>
+              <div className="grid gap-2">
+                <Label htmlFor="quality-notes">AI Generated Notes</Label>
+                <Textarea
+                  id="quality-notes"
+                  placeholder="Click 'Generate' to have our AI analyze your crop image..."
+                  value={qualityNotes}
+                  readOnly={isLoadingNotes}
+                  onChange={(e) => setQualityNotes(e.target.value)}
+                  rows={5}
+                />
+              </div>
+            </CardContent>
+            <CardFooter>
+                <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <UploadCloud className="mr-2 h-4 w-4" />
+                        Publish Listing
+                      </>
+                    )}
+                </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      </form>
+    </>
+  );
+}
