@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { ArrowUpRight, DollarSign, List, Loader2, PlusCircle, MoreHorizontal, Edit, Trash2, Upload } from 'lucide-react';
+import { ArrowUpRight, DollarSign, List, Loader2, PlusCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import type { CropListing } from '@/lib/types';
@@ -138,18 +138,11 @@ export default function FarmerDashboard() {
         </Card>
       </div>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
+        <CardHeader>
             <CardTitle>My Listings</CardTitle>
             <CardDescription>
               An overview of your crop listings.
             </CardDescription>
-          </div>
-          <Button asChild>
-            <Link href="/dashboard/farmer/listings/new">
-              <Upload className="mr-2 h-4 w-4" /> Upload Product
-            </Link>
-          </Button>
         </CardHeader>
         <CardContent>
           <Table>

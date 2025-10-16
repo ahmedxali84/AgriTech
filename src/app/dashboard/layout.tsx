@@ -44,7 +44,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     // This effect handles redirecting the user to their specific dashboard.
-    if (userProfile && pathname === '/dashboard') {
+    if (userProfile && (pathname === '/dashboard' || pathname === '/dashboard/farmer/listings')) {
       router.replace(`/dashboard/${userProfile.role}`);
     }
   }, [userProfile, pathname, router]);

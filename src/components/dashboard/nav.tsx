@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { usePathname } from 'next/navigation';
 import {
   SidebarMenu,
@@ -11,6 +11,7 @@ import {
   Settings,
   Store,
   List,
+  LayoutDashboard
 } from 'lucide-react';
 import Link from 'next/link';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -30,7 +31,8 @@ export function DashboardNav() {
   const { data: userProfile } = useDoc<User>(userRef);
 
   const farmerNav = [
-    { href: '/dashboard/farmer', label: 'My Listings', icon: List },
+    { href: '/dashboard/farmer', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/dashboard/farmer/listings', label: 'My Listings', icon: List },
     { href: '/dashboard/farmer/listings/new', label: 'New Listing', icon: PlusCircle },
     { href: '/market', label: 'Market', icon: Store },
     { href: '/dashboard/settings', label: 'Settings', icon: Settings },
@@ -56,7 +58,7 @@ export function DashboardNav() {
         <SidebarMenuItem key={item.href}>
           <SidebarMenuButton
             asChild
-            isActive={pathname === item.href}
+            isActive={pathname.startsWith(item.href) && (item.href !== '/dashboard/farmer' || pathname === '/dashboard/farmer')}
             tooltip={item.label}
           >
             <Link href={item.href}>
