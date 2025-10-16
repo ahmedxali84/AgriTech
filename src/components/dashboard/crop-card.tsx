@@ -17,21 +17,27 @@ interface CropCardProps {
 }
 
 export function CropCard({ listing }: CropCardProps) {
-  // This robust check ensures we always have a valid image URL.
-  // It checks for a non-empty string in the images array.
-  // If it's missing, null, or an empty string, it uses a reliable placeholder.
-  const validImageUrl =
-    listing.images && listing.images[0]
+  // Use the new image as the default fallback
+  const defaultImageUrl =
+    'https://images.unsplash.com/photo-1499529112087-3cb3b73cec95?q=80&w=1974&auto=format&fit=crop';
+
+  const firstImage =
+    Array.isArray(listing.images) &&
+    typeof listing.images[0] === 'string' &&
+    listing.images[0].trim() !== ''
       ? listing.images[0]
-      : `https://picsum.photos/seed/${listing.id}/600/400`;
+      : defaultImageUrl;
+
+  const altText = listing.cropType || "A beautiful field of crops";
+
 
   return (
     <Card className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full flex flex-col w-full">
       <CardHeader className="p-0 relative">
         <Link href={`/market/${listing.id}`} className="block">
           <Image
-            src={validImageUrl}
-            alt={listing.cropType}
+            src={firstImage}
+            alt={altText}
             width={600}
             height={400}
             unoptimized
