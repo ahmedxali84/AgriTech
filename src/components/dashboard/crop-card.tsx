@@ -11,48 +11,19 @@ import { MapPin } from 'lucide-react';
 import type { CropListing } from '@/lib/types';
 import Link from 'next/link';
 import { Icons } from '../icons';
-import { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
 
 interface CropCardProps {
   listing: CropListing & { id: string };
 }
 
 export function CropCard({ listing }: CropCardProps) {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const firestore = useFirestore();
-
-  useEffect(() => {
-    // If listing already has image(s), use first valid one
-    if (listing.images && listing.images[0]) {
-      setImageUrl(listing.images[0]);
-    } else if (firestore) {
-      // Otherwise, attempt to fetch the latest AI image from Firestore
-      const fetchImage = async () => {
-        try {
-          const ref = doc(firestore, "crops", listing.id);
-          const snap = await getDoc(ref);
-          const data = snap.data();
-          // Set the image if found, otherwise it will remain null for the fallback
-          if (data?.images && Array.isArray(data.images) && data.images[0]) {
-            setImageUrl(data.images[0]);
-          } else {
-             setImageUrl(null); // Explicitly set to null for fallback
-          }
-        } catch (error) {
-          console.error("🔥 Error fetching image:", error);
-          setImageUrl(null); // Fallback on error
-        }
-      };
-      fetchImage();
-    } else {
-        // Fallback if firestore is not available yet
-        setImageUrl(null);
-    }
-  }, [listing, firestore]);
-
-  const validImageUrl = imageUrl || `https://picsum.photos/seed/${listing.cropType}/600/400`;
+  // This robust check ensures we always have a valid image URL.
+  // It checks for a non-empty string in the images array.
+  // If it's missing, null, or an empty string, it uses a reliable placeholder.
+  const validImageUrl =
+    listing.images && listing.images[0]
+      ? listing.images[0]
+      : `https://picsum.photos/seed/${listing.id}/600/400`;
 
   return (
     <Card className="overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full flex flex-col w-full">
