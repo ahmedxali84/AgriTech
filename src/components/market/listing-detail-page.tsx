@@ -29,7 +29,6 @@ import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
 import { Icons } from '@/components/icons';
 import { format } from 'date-fns';
-import { useState, useEffect } from 'react';
 import {
   Carousel,
   CarouselContent,
@@ -39,30 +38,17 @@ import {
 } from "@/components/ui/carousel"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { useLocalStorage } from '@/hooks/use-local-storage';
 
 export default function ListingDetailPageClient({ params }: { params: { id: string } }) {
   const firestore = useFirestore();
   const { user: authUser } = useUser();
   const router = useRouter();
 
-  const [crops] = useLocalStorage<CropListing[]>('crops', []);
-  const [listing, setListing] = useState<CropListing | null>(null);
-  const [isListingLoading, setIsListingLoading] = useState(true);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isClient) return;
-    const foundListing = crops.find(c => c.id === params.id);
-    if (foundListing) {
-      setListing(foundListing);
-    }
-    setIsListingLoading(false);
-  }, [params.id, crops, isClient]);
+  const listingRef = useMemoFirebase(
+    () => (firestore ? doc(firestore, 'crops', params.id) : null),
+    [firestore, params.id]
+  );
+  const { data: listing, isLoading: isListingLoading } = useDoc<CropListing>(listingRef);
 
   const userRef = useMemoFirebase(
     () => (firestore && listing ? doc(firestore, 'users', listing.farmerId) : null),
@@ -70,7 +56,7 @@ export default function ListingDetailPageClient({ params }: { params: { id: stri
   );
   const { data: farmerProfile, isLoading: isFarmerLoading } = useDoc<User>(userRef);
   
-  const isLoading = !isClient || isListingLoading || isFarmerLoading;
+  const isLoading = isListingLoading || isFarmerLoading;
   const isOwnListing = authUser?.uid === listing?.farmerId;
 
   if (isLoading) {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { ArrowUpRight, DollarSign, List, Loader2, PlusCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import type { CropListing } from '@/lib/types';
 import {
   DropdownMenu,
@@ -41,49 +41,24 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { useLocalStorage } from '@/hooks/use-local-storage';
-import { defaultCrops } from '@/lib/default-crops';
+import { collection, query, where, doc, deleteDoc } from 'firebase/firestore';
 
 export default function FarmerDashboard() {
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const { toast } = useToast();
 
-  // useLocalStorage is safe here because this entire component is a client component.
-  // The logic inside will handle window availability.
-  const [allCrops, setAllCrops] = useLocalStorage<CropListing[]>('crops', []);
-  const [userCrops, setUserCrops] = useState<CropListing[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // This effect runs only on the client, after the component mounts.
-    setIsLoading(true);
-    if (!isUserLoading && user) {
-        // We can safely access localStorage-backed state now.
-        if (allCrops.length === 0) {
-            const initialCrops = defaultCrops.map(c => ({...c, farmerId: user.uid}));
-            setAllCrops(initialCrops); // This will trigger a re-render
-        } else {
-            setUserCrops(allCrops.filter(c => c.farmerId === user.uid));
-        }
-    } else if (!isUserLoading && !user) {
-        // User is not logged in, no crops to show.
-        setUserCrops([]);
-    }
-    setIsLoading(false);
-  }, [user, isUserLoading, allCrops, setAllCrops]);
-  
-  useEffect(() => {
-    // This effect reacts to changes in allCrops (e.g., after initialization)
-    // and filters them for the current user.
-    if(user){
-      setUserCrops(allCrops.filter(c => c.farmerId === user.uid));
-    }
-  }, [allCrops, user]);
-
+  const userCropsQuery = useMemoFirebase(
+    () =>
+      firestore && user
+        ? query(collection(firestore, 'crops'), where('farmerId', '==', user.uid))
+        : null,
+    [firestore, user]
+  );
+  const { data: userCrops, isLoading: areCropsLoading } = useCollection<CropListing>(userCropsQuery);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [listingToDelete, setListingToDelete] = useState<CropListing | null>(null);
-
 
   const handleDeleteClick = (listing: CropListing) => {
     setListingToDelete(listing);
@@ -91,9 +66,9 @@ export default function FarmerDashboard() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!listingToDelete) return;
+    if (!listingToDelete || !firestore) return;
     try {
-      setAllCrops((prevCrops) => prevCrops.filter(c => c.id !== listingToDelete.id));
+      await deleteDoc(doc(firestore, 'crops', listingToDelete.id));
       toast({
         title: 'Listing Deleted',
         description: `Your listing for ${listingToDelete.cropType} has been removed.`,
@@ -120,7 +95,7 @@ export default function FarmerDashboard() {
     </div>
   );
 
-  if (isLoading || isUserLoading) {
+  if (areCropsLoading || isUserLoading) {
       return <PageLoader />;
   }
 
@@ -273,7 +248,7 @@ export default function FarmerDashboard() {
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete your
-              listing for <span className="font-bold">{listingToDelete?.cropType}</span> from your device.
+              listing for <span className="font-bold">{listingToDelete?.cropType}</span> from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -8,40 +8,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useUser } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import type { CropListing } from '@/lib/types';
 import { Loader2, Search, Store, ArrowLeft } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { countries as allCountries } from '@/lib/countries';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { useLocalStorage } from '@/hooks/use-local-storage';
-import { defaultCrops } from '@/lib/default-crops';
+import { collection, query, where } from 'firebase/firestore';
 
 export default function MarketPage() {
-  const { user } = useUser();
   const router = useRouter();
-  const [cropListings, setCropListings] = useLocalStorage<CropListing[]>('crops', []);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isClient, setIsClient] = useState(false);
+  const firestore = useFirestore();
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isClient) return;
-    
-    setIsLoading(true);
-    // Initialize with default crops if local storage is empty
-    if (cropListings.length === 0) {
-        // We assign a farmerId from the current user, or a dummy one if no user is logged in
-        const initialCrops = defaultCrops.map(c => ({...c, farmerId: user?.uid || 'default-farmer'}));
-        setCropListings(initialCrops);
-    }
-    setIsLoading(false);
-  }, [user, cropListings.length, setCropListings, isClient]);
-
+  const cropsQuery = useMemoFirebase(
+    () => (firestore ? query(collection(firestore, 'crops'), where('status', '==', 'Listed')) : null),
+    [firestore]
+  );
+  const { data: cropListings, isLoading: areCropsLoading } = useCollection<CropListing>(cropsQuery);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('all');
@@ -65,7 +49,7 @@ export default function MarketPage() {
   const filteredAndSortedListings = useMemo(() => {
     if (!cropListings) return [];
     
-    let filtered = cropListings.filter(l => l.status === 'Listed');
+    let filtered = [...cropListings];
 
     if (searchTerm) {
         filtered = filtered.filter((listing) =>
@@ -90,7 +74,7 @@ export default function MarketPage() {
   }, [cropListings, searchTerm, selectedCountry, sortOrder]);
   
   const renderContent = () => {
-    if (!isClient || isLoading) {
+    if (areCropsLoading) {
       return (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />

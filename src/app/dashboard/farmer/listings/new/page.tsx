@@ -24,16 +24,21 @@ import {
 import { Loader2, Sparkles, UploadCloud, ImagePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateCropQualityNotes } from '@/ai/flows/generate-crop-quality-notes';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import type { CropListing } from '@/lib/types';
-import { useLocalStorage } from '@/hooks/use-local-storage';
+import type { CropListing, User } from '@/lib/types';
+import { addDoc, collection, doc } from 'firebase/firestore';
 
 export default function NewListingPage() {
   const { user: authUser, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
 
-  const [crops, setCrops] = useLocalStorage<CropListing[]>('crops', []);
+  const userRef = useMemoFirebase(
+    () => (firestore && authUser ? doc(firestore, 'users', authUser.uid) : null),
+    [firestore, authUser]
+  );
+  const { data: userProfile } = useDoc<User>(userRef);
 
   const [previews, setPreviews] = useState<(string | null)[]>([null, null, null]);
   const [dataUris, setDataUris] = useState<(string | null)[]>([null, null, null]);
@@ -99,7 +104,7 @@ export default function NewListingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!authUser || !cropType || !quantity || !price || !dataUris[0] || !dataUris[1] || !dataUris[2]) {
+    if (!authUser || !firestore || !userProfile || !cropType || !quantity || !price || !dataUris[0] || !dataUris[1] || !dataUris[2]) {
       toast({
         variant: 'destructive',
         title: 'Incomplete Form',
@@ -111,31 +116,40 @@ export default function NewListingPage() {
     
     const imagesToSave = dataUris.filter((uri): uri is string => uri !== null);
     
-    const newListing: CropListing = {
-      id: `crop-${Date.now()}`,
-      farmerId: authUser.uid,
-      cropType: cropType,
-      quantity: Number(quantity),
-      price: Number(price),
-      location: `Unknown Location`,
-      city: 'Unknown',
-      country: 'Unknown',
-      images: imagesToSave,
-      qualityNotes: qualityNotes,
-      status: 'Listed',
-      listingDate: new Date().toISOString(),
-      aiVerified: qualityNotes !== '',
-    };
-    
-    setCrops(prevCrops => [...prevCrops, newListing]);
-    
-    toast({
-      title: 'Listing Published!',
-      description: `${cropType} has been listed on the marketplace.`,
-    });
+    try {
+      const newListing: Omit<CropListing, 'id'> = {
+        farmerId: authUser.uid,
+        cropType: cropType,
+        quantity: Number(quantity),
+        price: Number(price),
+        location: userProfile.location || 'Unknown Location',
+        city: userProfile.city || 'Unknown',
+        country: userProfile.country || 'Unknown',
+        images: imagesToSave,
+        qualityNotes: qualityNotes,
+        status: 'Listed',
+        listingDate: new Date().toISOString(),
+        aiVerified: qualityNotes !== '',
+      };
+      
+      await addDoc(collection(firestore, 'crops'), newListing);
+      
+      toast({
+        title: 'Listing Published!',
+        description: `${cropType} has been listed on the marketplace.`,
+      });
 
-    setIsSubmitting(false);
-    router.push('/dashboard/farmer');
+      router.push('/dashboard/farmer');
+    } catch (error) {
+      console.error("Error creating listing: ", error);
+      toast({
+        variant: 'destructive',
+        title: 'Submission Failed',
+        description: 'Could not create the listing. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isUserLoading) {

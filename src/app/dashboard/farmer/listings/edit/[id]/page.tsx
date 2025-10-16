@@ -24,20 +24,23 @@ import {
 import { Loader2, Sparkles, ImagePlus, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateCropQualityNotes } from '@/ai/flows/generate-crop-quality-notes';
-import { useUser } from '@/firebase';
+import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import type { CropListing } from '@/lib/types';
-import { useLocalStorage } from '@/hooks/use-local-storage';
+import { doc, updateDoc } from 'firebase/firestore';
 
 export default function EditListingPage({ params }: { params: { id: string } }) {
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
-  const [crops, setCrops] = useLocalStorage<CropListing[]>('crops', []);
-  const [listing, setListing] = useState<CropListing | null>(null);
+  const listingRef = useMemoFirebase(
+    () => (firestore ? doc(firestore, 'crops', params.id) : null),
+    [firestore, params.id]
+  );
+  const { data: listing, isLoading: isListingLoading } = useDoc<CropListing>(listingRef);
 
-  const [isListingLoading, setIsListingLoading] = useState(true);
   const [previews, setPreviews] = useState<(string | null)[]>([null, null, null]);
   const [dataUris, setDataUris] = useState<(string | null)[]>([null, null, null]);
   const [qualityNotes, setQualityNotes] = useState('');
@@ -48,46 +51,34 @@ export default function EditListingPage({ params }: { params: { id: string } }) 
   const [price, setPrice] = useState('');
   
   useEffect(() => {
-    if (isUserLoading) return; // Wait for user to be loaded
-
-    setIsListingLoading(true);
-    if (crops.length > 0) {
-      const foundListing = crops.find(c => c.id === params.id);
-      if (foundListing) {
-        setListing(foundListing);
-        if (user && foundListing.farmerId !== user.uid) {
-          toast({ variant: 'destructive', title: 'Unauthorized', description: "You don't have permission to edit this listing."});
-          router.push('/dashboard/farmer');
-          return;
-        }
-        setCropType(foundListing.cropType);
-        setQuantity(foundListing.quantity.toString());
-        setPrice(foundListing.price.toString());
-        setQualityNotes(foundListing.qualityNotes || '');
-        if (foundListing.images && foundListing.images.length > 0) {
-          const currentPreviews = [null, null, null];
-          const currentDataUris = [null, null, null];
-          foundListing.images.forEach((img, i) => {
-              if (i < 3) {
-                  currentPreviews[i] = img;
-                  currentDataUris[i] = img;
-              }
-          });
-          setPreviews(currentPreviews);
-          setDataUris(currentDataUris);
-        }
-      } else {
-        toast({ variant: 'destructive', title: 'Not Found', description: "Listing not found."});
+    if (isUserLoading) return;
+    if (listing) {
+      if (user && listing.farmerId !== user.uid) {
+        toast({ variant: 'destructive', title: 'Unauthorized', description: "You don't have permission to edit this listing."});
         router.push('/dashboard/farmer');
+        return;
       }
-      setIsListingLoading(false);
-    } else if (crops) {
-      // Crops are loaded but empty, meaning the listing can't be found
-      setIsListingLoading(false);
-       toast({ variant: 'destructive', title: 'Not Found', description: "Listing not found."});
-       router.push('/dashboard/farmer');
+      setCropType(listing.cropType);
+      setQuantity(listing.quantity.toString());
+      setPrice(listing.price.toString());
+      setQualityNotes(listing.qualityNotes || '');
+      if (listing.images && listing.images.length > 0) {
+        const currentPreviews = [null, null, null];
+        const currentDataUris = [null, null, null];
+        listing.images.forEach((img, i) => {
+            if (i < 3) {
+                currentPreviews[i] = img;
+                currentDataUris[i] = img;
+            }
+        });
+        setPreviews(currentPreviews);
+        setDataUris(currentDataUris);
+      }
+    } else if (!isListingLoading) {
+      toast({ variant: 'destructive', title: 'Not Found', description: "Listing not found."});
+      router.push('/dashboard/farmer');
     }
-  }, [params.id, crops, user, router, toast, isUserLoading]);
+  }, [listing, isListingLoading, user, isUserLoading, router, toast]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
@@ -133,7 +124,7 @@ export default function EditListingPage({ params }: { params: { id: string } }) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!listing || !cropType || !quantity || !price || !dataUris[0] || !dataUris[1] || !dataUris[2]) {
+    if (!listingRef || !listing || !cropType || !quantity || !price || !dataUris[0] || !dataUris[1] || !dataUris[2]) {
       toast({ variant: 'destructive', title: 'Incomplete Form', description: 'Please fill out all fields and upload all three images.' });
       return;
     }
@@ -142,22 +133,24 @@ export default function EditListingPage({ params }: { params: { id: string } }) 
     
     const imagesToSave = dataUris.filter((uri): uri is string => uri !== null);
 
-    const updatedListing: CropListing = {
-        ...listing,
-        cropType: cropType,
-        quantity: Number(quantity),
-        price: Number(price),
-        images: imagesToSave,
-        qualityNotes: qualityNotes,
-        aiVerified: qualityNotes !== '' && listing.qualityNotes !== qualityNotes,
-    };
-
-    setCrops(prevCrops => prevCrops.map(c => c.id === params.id ? updatedListing : c));
-
-    toast({ title: 'Listing Updated!', description: `${cropType} has been successfully updated.` });
-    router.push('/dashboard/farmer');
-    
-    setIsSubmitting(false);
+    try {
+      const updatedData = {
+          cropType: cropType,
+          quantity: Number(quantity),
+          price: Number(price),
+          images: imagesToSave,
+          qualityNotes: qualityNotes,
+          aiVerified: qualityNotes !== '' && listing.qualityNotes !== qualityNotes,
+      };
+      await updateDoc(listingRef, updatedData);
+      toast({ title: 'Listing Updated!', description: `${cropType} has been successfully updated.` });
+      router.push('/dashboard/farmer');
+    } catch(error) {
+      console.error("Error updating document:", error);
+      toast({ variant: 'destructive', title: 'Update Failed', description: 'Could not save changes. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   if (isUserLoading || isListingLoading) {

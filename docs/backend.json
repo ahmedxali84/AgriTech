@@ -169,6 +169,12 @@
         "$ref": "#/entities/User"
       },
       "description": "Stores user profile data. Accessible only by the authenticated user with matching userId."
+    },
+    "/crops/{cropId}": {
+      "schema": {
+        "$ref": "#/entities/Crop"
+      },
+      "description": "Stores all crop listings. Publicly readable, but only writable by the farmer who owns the listing."
     }
   }
 }
