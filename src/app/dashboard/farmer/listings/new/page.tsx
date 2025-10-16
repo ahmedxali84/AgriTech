@@ -24,6 +24,7 @@ import {
 import { Loader2, Sparkles, UploadCloud, ImagePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateCropQualityNotes } from '@/ai/flows/generate-crop-quality-notes';
+import { generateCropImage } from '@/ai/flows/generate-crop-image';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import type { CropListing, User } from '@/lib/types';
@@ -104,19 +105,33 @@ export default function NewListingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!authUser || !firestore || !userProfile || !cropType || !quantity || !price || !dataUris[0] || !dataUris[1] || !dataUris[2]) {
+    if (!authUser || !firestore || !userProfile || !cropType || !quantity || !price) {
       toast({
         variant: 'destructive',
         title: 'Incomplete Form',
-        description: 'Please fill out all fields and upload all three images.',
+        description: 'Please fill out crop type, quantity, and price.',
       });
       return;
     }
     setIsSubmitting(true);
     
-    const imagesToSave = dataUris.filter((uri): uri is string => uri !== null);
+    let imagesToSave = dataUris.filter((uri): uri is string => !!uri);
     
     try {
+      // If no images are provided, generate one automatically
+      if (imagesToSave.length === 0) {
+        toast({
+            title: 'Generating Image',
+            description: 'No images uploaded. Generating one for you with AI...',
+        });
+        const imageResult = await generateCropImage({ cropType });
+        if(imageResult.imageUrl) {
+            imagesToSave.push(imageResult.imageUrl);
+        } else {
+             throw new Error('AI image generation failed.');
+        }
+      }
+        
       const newListing: Omit<CropListing, 'id'> = {
         farmerId: authUser.uid,
         cropType: cropType,
@@ -142,10 +157,11 @@ export default function NewListingPage() {
       router.push('/dashboard/farmer');
     } catch (error) {
       console.error("Error creating listing: ", error);
+      const errorMessage = error instanceof Error ? error.message : 'Could not create the listing. Please try again.';
       toast({
         variant: 'destructive',
         title: 'Submission Failed',
-        description: 'Could not create the listing. Please try again.',
+        description: errorMessage,
       });
     } finally {
       setIsSubmitting(false);
@@ -219,7 +235,7 @@ export default function NewListingPage() {
             <CardHeader>
               <CardTitle>Crop Images</CardTitle>
               <CardDescription>
-                Upload three photos of your crop. Good photos help build trust.
+                Upload photos of your crop, or we'll generate one for you!
               </CardDescription>
             </CardHeader>
             <CardContent>
