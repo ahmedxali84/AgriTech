@@ -10,7 +10,6 @@ import {
   ShoppingBag,
   Settings,
   Store,
-  List,
   LayoutDashboard
 } from 'lucide-react';
 import Link from 'next/link';
@@ -32,7 +31,6 @@ export function DashboardNav() {
 
   const farmerNav = [
     { href: '/dashboard/farmer', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/dashboard/farmer/listings', label: 'My Listings', icon: List },
     { href: '/dashboard/farmer/listings/new', label: 'New Listing', icon: PlusCircle },
     { href: '/market', label: 'Market', icon: Store },
     { href: '/dashboard/settings', label: 'Settings', icon: Settings },
