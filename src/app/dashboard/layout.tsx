@@ -15,10 +15,9 @@ import { DashboardNav } from '@/components/dashboard/nav';
 import { UserNav } from '@/components/dashboard/user-nav';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { usePathname, useRouter } from 'next/navigation';
-import { Loader2, PlusCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { doc } from 'firebase/firestore';
 import type { User } from '@/lib/types';
-import { Button } from '@/components/ui/button';
 
 export default function DashboardLayout({
   children,
@@ -103,15 +102,6 @@ export default function DashboardLayout({
       <SidebarInset>
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:pt-4">
           <SidebarTrigger className="md:hidden" />
-          {userProfile?.role === 'farmer' && (
-             <div className="flex items-center space-x-2 ml-auto">
-                <Button asChild>
-                  <Link href="/dashboard/farmer/listings/new">
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Listing
-                  </Link>
-                </Button>
-            </div>
-          )}
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
           {children}

@@ -58,7 +58,7 @@ export function DashboardNav() {
         <SidebarMenuItem key={item.href}>
           <SidebarMenuButton
             asChild
-            isActive={pathname.startsWith(item.href) && (item.href !== '/dashboard/farmer' || pathname === '/dashboard/farmer')}
+            isActive={pathname === item.href}
             tooltip={item.label}
           >
             <Link href={item.href}>

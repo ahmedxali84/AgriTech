@@ -138,11 +138,18 @@ export default function FarmerDashboard() {
         </Card>
       </div>
       <Card>
-        <CardHeader>
-            <CardTitle>My Listings</CardTitle>
-            <CardDescription>
-              An overview of your crop listings.
-            </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>My Listings</CardTitle>
+              <CardDescription>
+                An overview of your crop listings.
+              </CardDescription>
+            </div>
+             <Button asChild>
+                <Link href="/dashboard/farmer/listings/new">
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Listing
+                </Link>
+             </Button>
         </CardHeader>
         <CardContent>
           <Table>
