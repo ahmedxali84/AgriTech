@@ -8,15 +8,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import type { CropListing } from '@/lib/types';
-import { Loader2, Search } from 'lucide-react';
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import type { CropListing, User } from '@/lib/types';
+import { Loader2, Search, PlusCircle } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { countries as allCountries } from '@/lib/countries';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, doc } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function RetailerDashboard() {
   const firestore = useFirestore();
+  const { user: authUser } = useUser();
+
+  const userProfileRef = useMemoFirebase(
+    () => (firestore && authUser ? doc(firestore, 'users', authUser.uid) : null),
+    [firestore, authUser]
+  );
+  const { data: userProfile } = useDoc<User>(userProfileRef);
 
   const cropsQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'crops'), where('status', '==', 'Listed')) : null),
@@ -93,7 +102,7 @@ export default function RetailerDashboard() {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
         <div>
           <h2 className="text-3xl font-bold tracking-tight font-headline">
             Browse Crops
@@ -102,6 +111,13 @@ export default function RetailerDashboard() {
             Find the best produce from trusted farmers.
           </p>
         </div>
+         {userProfile && userProfile.role === 'farmer' && (
+          <Button asChild>
+            <Link href="/dashboard/farmer/listings/new">
+              <PlusCircle className="mr-2 h-4 w-4" /> Add New Listing
+            </Link>
+          </Button>
+        )}
       </div>
 
       <div className="bg-card p-4 rounded-lg border flex flex-col md:flex-row gap-4 sticky top-0 md:top-4 z-10 backdrop-blur-sm bg-background/80 mt-4">
